@@ -514,22 +514,27 @@ fn load_bank_forks(
         } else {
             "snapshot.ledger-tool"
         });
+    info!("bank snapshots dir: {:?}", bank_snapshots_dir);
 
     let mut starting_slot = 0; // default start check with genesis
     let snapshot_config = {
         let full_snapshot_archives_dir =
             snapshot_archive_path.unwrap_or_else(|| blockstore.ledger_path().to_path_buf());
+        info!("full_snapshot_archives_dir: {:?}", full_snapshot_archives_dir);
         let incremental_snapshot_archives_dir =
             incremental_snapshot_archive_path.unwrap_or_else(|| full_snapshot_archives_dir.clone());
+        info!("incremental_snapshot_archives_dir: {:?}", incremental_snapshot_archives_dir);
         if let Some(full_snapshot_slot) =
         snapshot_utils::get_highest_full_snapshot_archive_slot(&full_snapshot_archives_dir)
         {
+            info!("found a full snapshot slot: {}", full_snapshot_slot);
             let incremental_snapshot_slot =
                 snapshot_utils::get_highest_incremental_snapshot_archive_slot(
                     &incremental_snapshot_archives_dir,
                     full_snapshot_slot,
                 )
                     .unwrap_or_default();
+            info!("incremental snapshot slot: {}", incremental_snapshot_slot);
             starting_slot = std::cmp::max(full_snapshot_slot, incremental_snapshot_slot);
         }
 
