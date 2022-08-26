@@ -48,8 +48,8 @@ fn main() {
     let args: Args = Args::parse();
     info!("Creating snapshot at slot {}", args.slot);
 
-    let snapshot_archive_path = Some(args.output_dir.clone());
-    let incremental_snapshot_archive_path = Some(args.output_dir.clone());
+    let snapshot_archive_path = Some(args.ledger_path.clone());
+    let incremental_snapshot_archive_path = Some(args.ledger_path.clone());
 
     let genesis_config = open_genesis_config(&args.ledger_path, MAX_GENESIS_ARCHIVE_UNPACKED_SIZE);
     let blockstore = open_blockstore(
