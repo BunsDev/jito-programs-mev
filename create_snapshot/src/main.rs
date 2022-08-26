@@ -544,6 +544,7 @@ fn load_bank_forks(
     };
 
     if let Some(halt_slot) = process_options.halt_at_slot {
+        info!("found starting slot {}", starting_slot);
         // Check if we have the slot data necessary to replay from starting_slot to >= halt_slot.
         //  - This will not catch the case when loading from genesis without a full slot 0.
         if !slot_range_connected(blockstore, starting_slot, halt_slot) {
@@ -628,6 +629,7 @@ fn load_bank_forks(
 /// Determines if we can iterate from `starting_slot` to >= `ending_slot` by full slots
 /// `starting_slot` is excluded from the `is_full()` check
 fn slot_range_connected(blockstore: &Blockstore, starting_slot: Slot, ending_slot: Slot) -> bool {
+    info!("checking connected slots");
     if starting_slot == ending_slot {
         return true;
     }
@@ -636,14 +638,20 @@ fn slot_range_connected(blockstore: &Blockstore, starting_slot: Slot, ending_slo
         Ok(Some(starting_slot_meta)) => starting_slot_meta.next_slots.into(),
         _ => return false,
     };
+    info!("no blockstore meta for starting slot");
     while let Some(slot) = next_slots.pop_front() {
         if let Ok(Some(slot_meta)) = blockstore.meta(slot) {
             if slot_meta.is_full() {
                 match slot.cmp(&ending_slot) {
-                    cmp::Ordering::Less => next_slots.extend(slot_meta.next_slots),
+                    cmp::Ordering::Less => {
+                        info!("found next slots: {:?}", slot_meta.next_slots);
+                        next_slots.extend(slot_meta.next_slots)
+                    },
                     _ => return true,
                 }
             }
+        } else {
+            info!("missing slot {}", slot);
         }
     }
 
