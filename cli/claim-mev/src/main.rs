@@ -147,12 +147,10 @@ fn command_claim_all(
                 amount: node.clone().amount,
                 bump: claim_bump,
             };
-            println!("Program tip accounts[0]\n{:?}", program_tip_accounts[0]);
-            println!("Config data passed to ClaimAccounts:\n{:?}", program_tip_accounts[0].0);
             println!("--------Claiming tips for {:#?}--------", claimant);
 
             let claim_accounts = ClaimAccounts {
-                config: program_tip_accounts[0].0, // TODO: check that this array access is safe
+                config: Pubkey::from_str("DvyypEYezZ2HUhZfZxhwr4xbPy8KemSMHNyRPxDXJWoS").unwrap(),
                 tip_distribution_account: tip_distribution_account.clone(),
                 claim_status,
                 claimant,
