@@ -147,6 +147,8 @@ fn command_claim_all(
                 amount: node.clone().amount,
                 bump: claim_bump,
             };
+            println!("Program tip accounts[0]\n{:?}", program_tip_accounts[0]);
+            println!("Config data passed to ClaimAccounts:\n{:?}", program_tip_accounts[0].0);
             println!("--------Claiming tips for {:#?}--------", claimant);
 
             let claim_accounts = ClaimAccounts {
