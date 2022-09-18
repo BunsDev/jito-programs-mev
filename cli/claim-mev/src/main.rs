@@ -88,7 +88,7 @@ fn main() -> Result<(), Error> {
         .unwrap_or_else(|_| cli_config.json_rpc_url.clone());
     let url = Cluster::from_str(json_rpc_url.as_str()).unwrap();
 
-    let rpc_client = RpcClient::new_with_commitment(url.clone(), CommitmentConfig::confirmed());
+    let rpc_client = RpcClient::new_with_timeout_and_commitment(url.clone(), Duration::from_secs(30), CommitmentConfig::confirmed());
 
     let fee_payer_path = if let Some(fee_payer) = matches.value_of("fee_payer") {
         fee_payer
