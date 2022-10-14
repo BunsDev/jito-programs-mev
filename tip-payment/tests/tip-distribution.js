@@ -36,7 +36,7 @@ describe( 'tests tip_distribution', () => {
         const initializer = await generateAccount( 100000000000000 )
         const authority = await generateAccount( 100000000000000 )
         const expiredFundsAccount = await generateAccount( 100000000000000 )
-        const numEpochsValid = new anchor.BN( 3 )
+        const numEpochsValid = new anchor.BN( 1 )
         const maxValidatorCommissionBps = 1000
 
         // then
@@ -135,50 +135,50 @@ describe( 'tests tip_distribution', () => {
         }
     })
 
-    it( '#set_merkle_root_upload_authority happy path', async () => {
-        const {
-            validatorVoteAccount,
-            maxValidatorCommissionBps,
-            tipDistributionAccount,
-            epochInfo,
-            bump,
-        } = await setup_initTipDistributionAccount()
-        await call_initTipDistributionAccount({
-            validatorCommissionBps: maxValidatorCommissionBps,
-            merkleRootUploadAuthority: validatorVoteAccount.publicKey,
-            config: configAccount,
-            systemProgram: SystemProgram.programId,
-            validatorVoteAccount,
-            tipDistributionAccount,
-            bump,
-        })
-        const newMerkleRootUploader = anchor.web3.Keypair.generate().publicKey
-
-        try {
-            await tipDistribution.rpc.setMerkleRootUploadAuthority(
-                newMerkleRootUploader,
-                {
-                    accounts: {
-                        tipDistributionAccount,
-                        signer: validatorVoteAccount.publicKey,
-                    },
-                    signers: [validatorVoteAccount],
-                },
-            )
-        } catch ( e ) {
-            assert.fail('Unexpected error: ' + e)
-        }
-
-        const actual = await tipDistribution.account.tipDistributionAccount.fetch( tipDistributionAccount )
-        const expected = {
-            validatorVoteAccount: validatorVoteAccount.publicKey,
-            epochCreatedAt: epochInfo.epoch,
-            merkleRoot: undefined,
-            merkleRootUploadAuthority: newMerkleRootUploader,
-            validatorCommissionBps: maxValidatorCommissionBps,
-        }
-        assertDistributionAccount( actual, expected )
-    })
+    // it( '#set_merkle_root_upload_authority happy path', async () => {
+    //     const {
+    //         validatorVoteAccount,
+    //         maxValidatorCommissionBps,
+    //         tipDistributionAccount,
+    //         epochInfo,
+    //         bump,
+    //     } = await setup_initTipDistributionAccount()
+    //     await call_initTipDistributionAccount({
+    //         validatorCommissionBps: maxValidatorCommissionBps,
+    //         merkleRootUploadAuthority: validatorVoteAccount.publicKey,
+    //         config: configAccount,
+    //         systemProgram: SystemProgram.programId,
+    //         validatorVoteAccount,
+    //         tipDistributionAccount,
+    //         bump,
+    //     })
+    //     const newMerkleRootUploader = anchor.web3.Keypair.generate().publicKey
+    //
+    //     try {
+    //         await tipDistribution.rpc.setMerkleRootUploadAuthority(
+    //             newMerkleRootUploader,
+    //             {
+    //                 accounts: {
+    //                     tipDistributionAccount,
+    //                     signer: validatorVoteAccount.publicKey,
+    //                 },
+    //                 signers: [validatorVoteAccount],
+    //             },
+    //         )
+    //     } catch ( e ) {
+    //         assert.fail('Unexpected error: ' + e)
+    //     }
+    //
+    //     const actual = await tipDistribution.account.tipDistributionAccount.fetch( tipDistributionAccount )
+    //     const expected = {
+    //         validatorVoteAccount: validatorVoteAccount.publicKey,
+    //         epochCreatedAt: epochInfo.epoch,
+    //         merkleRoot: undefined,
+    //         merkleRootUploadAuthority: newMerkleRootUploader,
+    //         validatorCommissionBps: maxValidatorCommissionBps,
+    //     }
+    //     assertDistributionAccount( actual, expected )
+    // })
 
     it( '#set_merkle_root_upload_authority fails with ErrorCode::Unauthorized', async () => {
         const {
@@ -188,43 +188,85 @@ describe( 'tests tip_distribution', () => {
             epochInfo,
             bump,
         } = await setup_initTipDistributionAccount()
-        await call_initTipDistributionAccount({
-            validatorCommissionBps: maxValidatorCommissionBps,
-            config: configAccount,
-            systemProgram: SystemProgram.programId,
-            merkleRootUploadAuthority: validatorVoteAccount.publicKey,
-            validatorVoteAccount,
-            tipDistributionAccount,
-            bump,
-        })
-        const newMerkleRootUploader = anchor.web3.Keypair.generate().publicKey
-        const unAuthedSigner = await generateAccount( 1000 )
+        let init = async () => {
+            await call_initTipDistributionAccount({
+                validatorCommissionBps: maxValidatorCommissionBps,
+                config: configAccount,
+                systemProgram: SystemProgram.programId,
+                merkleRootUploadAuthority: validatorVoteAccount.publicKey,
+                validatorVoteAccount,
+                tipDistributionAccount,
+                bump,
+            })
+            const newMerkleRootUploader = anchor.web3.Keypair.generate().publicKey
+            const unAuthedSigner = await generateAccount( 1000 )
 
-        try {
-            await tipDistribution.rpc.setMerkleRootUploadAuthority(
-                newMerkleRootUploader,
+            // try {
+            //     await tipDistribution.rpc.setMerkleRootUploadAuthority(
+            //         newMerkleRootUploader,
+            //         {
+            //             accounts: {
+            //                 tipDistributionAccount,
+            //                 signer: unAuthedSigner.publicKey,
+            //             },
+            //             signers: [unAuthedSigner],
+            //         },
+            //     )
+            //     assert.fail( 'Expected to fail' )
+            // } catch ( e ) {
+            //     assert( e.errorLogs[0].includes( 'Unauthorized signer.' ))
+            // }
+
+            // const actual = await tipDistribution.account.tipDistributionAccount.fetch( tipDistributionAccount )
+            // const expected = {
+            //     validatorVoteAccount: validatorVoteAccount.publicKey,
+            //     epochCreatedAt: epochInfo.epoch,
+            //     merkleRoot: undefined,
+            //     merkleRootUploadAuthority: validatorVoteAccount.publicKey,
+            //     validatorCommissionBps: maxValidatorCommissionBps,
+            // }
+            // assertDistributionAccount( actual, expected )
+        }
+        let close = async () => {
+            console.log(epochInfo.epoch)
+            let epoch = new anchor.BN( epochInfo.epoch )
+            // epoch = epoch.toArrayLike( Buffer, 'le', 8 )
+            await tipDistribution.rpc.closeTipDistributionAccount(
+                epoch,
                 {
                     accounts: {
+                        config: configAccount,
+                        expiredFundsAccount: config.expiredFundsAccount,
+                        signer: validatorVoteAccount.publicKey,
+                        validatorVoteAccount: validatorVoteAccount.publicKey,
                         tipDistributionAccount,
-                        signer: unAuthedSigner.publicKey,
                     },
-                    signers: [unAuthedSigner],
+                    signers: [validatorVoteAccount],
                 },
             )
-            assert.fail( 'Expected to fail' )
-        } catch ( e ) {
-            assert( e.errorLogs[0].includes( 'Unauthorized signer.' ))
+        }
+        const config = await tipDistribution.account.config.fetch( configAccount )
+        let waitForTDAToExpire = async () => {
+            while (true) {
+                const newEpochInfo = await provider.connection.getEpochInfo( 'confirmed' )
+                if ((Number.parseInt(config.numEpochsValid.toString()) + epochInfo.epoch) < newEpochInfo.epoch) {
+                    break
+                }
+                console.log('waiting for epoch to rollover', config.numEpochsValid.toString(), epochInfo.epoch, newEpochInfo.epoch)
+                await sleep(500)
+            }
         }
 
-        const actual = await tipDistribution.account.tipDistributionAccount.fetch( tipDistributionAccount )
-        const expected = {
-            validatorVoteAccount: validatorVoteAccount.publicKey,
-            epochCreatedAt: epochInfo.epoch,
-            merkleRoot: undefined,
-            merkleRootUploadAuthority: validatorVoteAccount.publicKey,
-            validatorCommissionBps: maxValidatorCommissionBps,
-        }
-        assertDistributionAccount( actual, expected )
+        console.log('init')
+        await init()
+        await waitForTDAToExpire()
+        console.log('closing')
+        await close()
+        console.log('reinit')
+        await init()
+        await sleep(2000)
+        console.log('successfully re-init tda')
+
     })
 
     it( '#upload_merkle_root happy path', async () => {

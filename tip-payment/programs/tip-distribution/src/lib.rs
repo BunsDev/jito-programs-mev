@@ -355,7 +355,8 @@ pub struct InitTipDistributionAccount<'info> {
         seeds = [
             TipDistributionAccount::SEED,
             validator_vote_account.as_ref(),
-            Clock::get().unwrap().epoch.to_le_bytes().as_ref(),
+            // Clock::get().unwrap().epoch.to_le_bytes().as_ref(),
+            0_u64.to_le_bytes().as_ref()
         ],
         bump,
         payer = payer,
